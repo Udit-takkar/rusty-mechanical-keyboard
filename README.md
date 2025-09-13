@@ -8,7 +8,6 @@ A high-performance Rust application that plays realistic mechanical keyboard sou
 - **Low Latency** - Optimized for instant audio response
 - **Concurrent Playback** - Multiple audio streams prevent sound queuing
 - **System-Wide** - Works across all applications, not just the terminal
-- **Cross-Platform** - Supports macOS, Windows, and Linux
 - **Auto-Releases** - Automatic builds and releases on every push to main
 - **Customizable** - Easy to swap sound packs
 
@@ -86,7 +85,7 @@ cargo run
 ### Prerequisites
 
 - **Rust** 1.70+ ([Install Rust](https://rustup.rs/))
-- **Audio system** (ALSA on Linux, Core Audio on macOS, DirectSound on Windows)
+- **Audio system** (Core Audio on macOS)
 
 ### Building
 
@@ -133,12 +132,6 @@ rusty-mechanical-keyboard/
 - **Threading** - Separate threads for keyboard detection and audio
 - **Efficient Data Structures** - Fast HashMap lookups for sound mapping
 
-### System Requirements
-
-- **RAM**: ~50MB (with sound pack loaded)
-- **CPU**: Minimal impact (optimized for low latency)
-- **Storage**: ~10MB (including sound pack)
-
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -146,20 +139,12 @@ rusty-mechanical-keyboard/
 #### "Permission denied" Error
 
 - **macOS**: Grant Accessibility permission in System Preferences
-- **Linux**: Add user to audio group: `sudo usermod -a -G audio $USER`
-- **Windows**: Run as Administrator if needed
 
 #### No Sound Playing
 
 - **Check audio output** - Ensure speakers/headphones are working
 - **Check volume** - Make sure system volume is up
 - **Check permissions** - Verify audio permissions are granted
-
-#### High CPU Usage
-
-- **Update Rust** - Ensure you're using the latest stable version
-- **Check sound files** - Corrupted audio files can cause issues
-- **Restart application** - Sometimes a restart helps
 
 ### Debug Mode
 
