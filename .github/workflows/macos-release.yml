@@ -1,0 +1,139 @@
+name: Auto Release for macOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build for Intel Macs
+        run: cargo build --release --target x86_64-apple-darwin
+
+      - name: Build for Apple Silicon Macs
+        run: cargo build --release --target aarch64-apple-darwin
+
+      - name: Create release directory
+        run: mkdir -p release
+
+      - name: Prepare Intel Mac release
+        run: |
+          mkdir -p release/intel
+          cp target/x86_64-apple-darwin/release/rusty-mechanical-keyboard release/intel/
+          cp -r nk-cream release/intel/
+          cp README.md release/intel/
+          cp LICENSE release/intel/ 2>/dev/null || echo "No LICENSE file found"
+          cd release/intel && tar -czf ../rusty-mechanical-keyboard-intel.tar.gz *
+
+      - name: Prepare Apple Silicon release
+        run: |
+          mkdir -p release/arm64
+          cp target/aarch64-apple-darwin/release/rusty-mechanical-keyboard release/arm64/
+          cp -r nk-cream release/arm64/
+          cp README.md release/arm64/
+          cp LICENSE release/arm64/ 2>/dev/null || echo "No LICENSE file found"
+          cd release/arm64 && tar -czf ../rusty-mechanical-keyboard-arm64.tar.gz *
+
+      - name: Create universal binary
+        run: |
+          mkdir -p release/universal
+          cp -r nk-cream release/universal/
+          cp README.md release/universal/
+          cp LICENSE release/universal/ 2>/dev/null || echo "No LICENSE file found"
+
+          # Create universal binary using lipo
+          lipo -create \
+            target/x86_64-apple-darwin/release/rusty-mechanical-keyboard \
+            target/aarch64-apple-darwin/release/rusty-mechanical-keyboard \
+            -output release/universal/rusty-mechanical-keyboard
+
+          cd release/universal && tar -czf ../rusty-mechanical-keyboard-universal.tar.gz *
+
+      - name: Generate checksums
+        run: |
+          cd release
+          for file in *.tar.gz; do
+            shasum -a 256 "$file" > "$file.sha256"
+          done
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get version from git
+        id: version
+        run: |
+          # Get current date for version
+          DATE=$(date +%Y.%m.%d)
+          COMMIT=$(git rev-parse --short HEAD)
+          VERSION="v${DATE}-${COMMIT}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag_name=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create and push version tag
+        run: |
+          TAG_NAME="${{ steps.version.outputs.tag_name }}"
+          git tag -a "${TAG_NAME}" -m "Auto release ${TAG_NAME}"
+          git push origin "${TAG_NAME}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: "Release ${{ steps.version.outputs.version }}"
+          body: |
+            ## 🎹 Rusty Mechanical Keyboard Sound Simulator
+
+            ### Downloads for macOS
+            - **Intel Macs**: `rusty-mechanical-keyboard-intel.tar.gz`
+            - **Apple Silicon Macs**: `rusty-mechanical-keyboard-arm64.tar.gz`
+            - **Universal Binary**: `rusty-mechanical-keyboard-universal.tar.gz` (works on both)
+
+            ### Installation
+            1. Download the appropriate file for your Mac
+            2. Extract the archive: `tar -xzf rusty-mechanical-keyboard-*.tar.gz`
+            3. Run: `./rusty-mechanical-keyboard`
+            4. Grant Accessibility permission when prompted
+
+            ### Requirements
+            - macOS 10.15 or later
+            - Accessibility permission required
+
+            ### What's New
+            - Auto-built from main branch
+            - Latest features and improvements
+          files: |
+            release/*.tar.gz
+            release/*.sha256
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
