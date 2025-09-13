@@ -63,6 +63,8 @@ impl SoundManager {
             "nk-cream/config.json",
             "./nk-cream/config.json",
             "../nk-cream/config.json",
+            "rusty-mechanical-keyboard/nk-cream/config.json",
+            "./rusty-mechanical-keyboard/nk-cream/config.json",
         ];
 
         println!("Current working directory: {:?}", std::env::current_dir());
@@ -104,6 +106,8 @@ impl SoundManager {
                     format!("nk-cream/{}", filename),
                     format!("./nk-cream/{}", filename),
                     format!("../nk-cream/{}", filename),
+                    format!("rusty-mechanical-keyboard/nk-cream/{}", filename),
+                    format!("./rusty-mechanical-keyboard/nk-cream/{}", filename),
                 ];
 
                 for sound_path in &sound_paths {
