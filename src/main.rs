@@ -59,14 +59,24 @@ impl SoundManager {
         let mut sounds = HashMap::new();
         let mut available_sounds = Vec::new();
 
+        // Get the directory where the executable is located
+        let exe_path = std::env::current_exe().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("."));
+
+        let exe_config_path = exe_dir.join("nk-cream/config.json");
+        let exe_config_str = exe_config_path.to_str().unwrap_or("");
+
         let config_paths = [
             "nk-cream/config.json",
             "./nk-cream/config.json",
             "../nk-cream/config.json",
             "rusty-mechanical-keyboard/nk-cream/config.json",
             "./rusty-mechanical-keyboard/nk-cream/config.json",
+            exe_config_str,
         ];
 
+        println!("Executable path: {:?}", exe_path);
+        println!("Executable directory: {:?}", exe_dir);
         println!("Current working directory: {:?}", std::env::current_dir());
         println!("Contents of current directory:");
         if let Ok(entries) = std::fs::read_dir(".") {
@@ -102,12 +112,16 @@ impl SoundManager {
 
         for (key, filename_opt) in &config.defines {
             if let Some(filename) = filename_opt {
+                let exe_sound_path = exe_dir.join("nk-cream").join(filename);
+                let exe_sound_str = exe_sound_path.to_str().unwrap_or("").to_string();
+
                 let sound_paths = [
                     format!("nk-cream/{}", filename),
                     format!("./nk-cream/{}", filename),
                     format!("../nk-cream/{}", filename),
                     format!("rusty-mechanical-keyboard/nk-cream/{}", filename),
                     format!("./rusty-mechanical-keyboard/nk-cream/{}", filename),
+                    exe_sound_str,
                 ];
 
                 for sound_path in &sound_paths {
