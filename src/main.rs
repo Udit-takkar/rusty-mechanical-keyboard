@@ -75,26 +75,6 @@ impl SoundManager {
             exe_config_str,
         ];
 
-        println!("Executable path: {:?}", exe_path);
-        println!("Executable directory: {:?}", exe_dir);
-        println!("Current working directory: {:?}", std::env::current_dir());
-        println!("Contents of current directory:");
-        if let Ok(entries) = std::fs::read_dir(".") {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    println!("  - {:?}", entry.path());
-                }
-            }
-        }
-        println!("Looking for config file in:");
-        for path in &config_paths {
-            println!(
-                "  - {} (exists: {})",
-                path,
-                std::path::Path::new(path).exists()
-            );
-        }
-
         let mut config_file = None;
         for path in &config_paths {
             if let Ok(file) = File::open(path) {
