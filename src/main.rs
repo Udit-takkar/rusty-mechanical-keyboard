@@ -65,9 +65,22 @@ impl SoundManager {
             "../nk-cream/config.json",
         ];
 
+        println!("Current working directory: {:?}", std::env::current_dir());
+        println!("Contents of current directory:");
+        if let Ok(entries) = std::fs::read_dir(".") {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    println!("  - {:?}", entry.path());
+                }
+            }
+        }
         println!("Looking for config file in:");
         for path in &config_paths {
-            println!("  - {}", path);
+            println!(
+                "  - {} (exists: {})",
+                path,
+                std::path::Path::new(path).exists()
+            );
         }
 
         let mut config_file = None;
