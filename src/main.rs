@@ -59,15 +59,46 @@ impl SoundManager {
         let mut sounds = HashMap::new();
         let mut available_sounds = Vec::new();
 
-        let config_file = File::open("nk-cream/config.json")?;
+        let config_paths = [
+            "nk-cream/config.json",
+            "./nk-cream/config.json",
+            "../nk-cream/config.json",
+        ];
+
+        println!("Looking for config file in:");
+        for path in &config_paths {
+            println!("  - {}", path);
+        }
+
+        let mut config_file = None;
+        for path in &config_paths {
+            if let Ok(file) = File::open(path) {
+                println!("Found config at: {}", path);
+                config_file = Some(file);
+                break;
+            }
+        }
+
+        let config_file =
+            config_file.ok_or("Could not find nk-cream/config.json in any expected location")?;
         let config: SoundConfig = serde_json::from_reader(config_file)?;
+
+        println!("Found config file, loading sounds...");
 
         for (key, filename_opt) in &config.defines {
             if let Some(filename) = filename_opt {
-                let sound_path = format!("nk-cream/{}", filename);
-                if let Ok(sound_data) = std::fs::read(&sound_path) {
-                    sounds.insert(key.clone(), sound_data);
-                    available_sounds.push(key.clone());
+                let sound_paths = [
+                    format!("nk-cream/{}", filename),
+                    format!("./nk-cream/{}", filename),
+                    format!("../nk-cream/{}", filename),
+                ];
+
+                for sound_path in &sound_paths {
+                    if let Ok(sound_data) = std::fs::read(sound_path) {
+                        sounds.insert(key.clone(), sound_data);
+                        available_sounds.push(key.clone());
+                        break;
+                    }
                 }
             }
         }
