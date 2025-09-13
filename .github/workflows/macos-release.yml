@@ -5,6 +5,12 @@ on:
     branches: [main]
   workflow_dispatch: # Allow manual trigger
 
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -102,7 +108,7 @@ jobs:
           git tag -a "${TAG_NAME}" -m "Auto release ${TAG_NAME}"
           git push origin "${TAG_NAME}"
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -136,4 +142,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
